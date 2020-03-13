@@ -16,6 +16,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
 import java.util.logging.Level;
 
 import org.openqa.selenium.Alert;
@@ -54,6 +55,54 @@ public class GenericWrappers {
 	public static String screenShotPath;
 	public static boolean isAppClosed;
 	
+	public static void setDriver(String driver) throws MalformedURLException {
+
+		switch (driver) {
+		case "Chrome":
+			String osName = System.getProperty("os.name");
+			String chromeDriverStr = "webdriver.chrome.driver";
+			switch (osName) {
+			case "Linux":
+				System.setProperty(chromeDriverStr, properties("Chrome.linux"));
+				break;
+			case "Mac OS X":
+				System.setProperty(chromeDriverStr, properties("Chrome.mac"));
+				break;
+			default:
+				System.setProperty(chromeDriverStr,
+						properties("Chrome.windows"));
+				break;
+			}
+//			ChromeOptions options = new ChromeOptions();
+//			DesiredCapabilities cap = DesiredCapabilities.chrome();
+//			cap.setCapability("acceptInsecureCerts", true);
+//			cap.setCapability(ChromeOptions.CAPABILITY, options);
+//			cap.setCapability(CapabilityType.UNEXPECTED_ALERT_BEHAVIOUR,
+//					UnexpectedAlertBehaviour.ACCEPT);
+//			cap.setCapability(CapabilityType.LOGGING_PREFS, logPrefs);
+//			webDriver = new ChromeDriver(cap);
+			webDriver = new ChromeDriver();
+			//webDriver = new RemoteWebDriver(new URL("http://10.140.237.208:4444/wd/hub"),cap);
+			break;
+		case "IE":
+			System.setProperty("webdriver.ie.driver", properties("Ie.windows"));
+			webDriver = new InternetExplorerDriver();
+			break;
+		case "Safari":
+			webDriver = new SafariDriver();
+			break;
+		case "iPad":
+			startAppiumServer();
+			break;
+		case "iPhoneSimulator":
+			startSimulator();
+			break;
+
+		default:
+			break;
+		}
+
+	}
 	public static void startAppiumServer() throws MalformedURLException {
 		if ((webDriver == null) || (webDriver != null & !(isAppiumDriver()))) {
 			try {
@@ -187,13 +236,13 @@ public class GenericWrappers {
 
 	public static void clickOnElement(WebElement element)
 	{
-		waitForElementToBeClickable(element,1);
+		//waitForElementToBeClickable(element,1);
 		element.click();
 	}
 	
 	public static void doubleClickOnElement(WebElement element)
 	{
-		waitForElementToBeClickable(element,3);
+		//waitForElementToBeClickable(element,3);
 		Actions action = new Actions(webDriver);
 		action.moveToElement(element).doubleClick().perform();
 	}
@@ -248,136 +297,24 @@ public class GenericWrappers {
 
 	}
 
-	public void waitForpresenceOfElement(WebElement element) {
-		wait = new WebDriverWait(webDriver, 100);
-		wait.until(ExpectedConditions.visibilityOf(element));
-	}
 
-	public static void waitForVisibilityOfElement(WebElement element) {
-		wait = new WebDriverWait(webDriver, 100);
-		wait.until(ExpectedConditions.visibilityOf(element));
-	}
+//	public static void waitForVisibilityOfElement(WebElement element) {
+//		wait = new WebDriverWait(webDriver, 100);
+//		wait.until(ExpectedConditions.visibilityOf(element));
+//	}
 
-	public static boolean waitForVisibilityOfElement(WebElement element,
-			int waitTimeInSec) {
-		WebElement visibleElement;
-		wait = new WebDriverWait(webDriver, waitTimeInSec);
-		try {
-			visibleElement = wait.until(ExpectedConditions
-					.visibilityOf(element));
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
-		}
-		return visibleElement != null ? true : false;
-	}
-
-	public static boolean waitForPageWithTitle(String title, int waitTimeInSec) {
-		Boolean isOnPage;
-		try {
-			wait = new WebDriverWait(webDriver, waitTimeInSec);
-			return wait.until(ExpectedConditions.titleContains(title));
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-			isOnPage = false;
-			// return false;
-		}
-		return isOnPage;
-	}
-
-	public boolean waitForPageWithUrl(String title, int waitTimeInSec) {
-		if (!("".equalsIgnoreCase(properties("pageTimeOut"))))
-		{
-			waitTimeInSec = Integer.parseInt(properties("pageTimeOut")) *60;
-		}
-		Boolean isOnPage;
-
-		try {
-			wait = new WebDriverWait(webDriver, waitTimeInSec);
-			return wait.until(ExpectedConditions.urlContains(title));
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-			isOnPage = false;
-		}
-		return isOnPage;
-	}
-	
-	public boolean waitForPageWithUrl(ArrayList<String> titleList, int waitTimeInSec) {
-		Boolean isOnPage = false;
-		if (!("".equalsIgnoreCase(properties("pageTimeOut"))))
-		{
-			waitTimeInSec = Integer.parseInt(properties("pageTimeOut")) *60;
-		}
-		for (String title : titleList) {
-			try {
-					wait = new WebDriverWait(webDriver, waitTimeInSec);
-					
-					if(wait.until(ExpectedConditions.urlContains(title)))
-					{
-						isOnPage = wait.until(ExpectedConditions.urlContains(title));
-						break;
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-					isOnPage = false;
-					waitTimeInSec = 5;
-				}
-		}
-		return isOnPage;
-	}
-	
-	public static boolean waitForElementToBeClickable(WebElement element,
-			int waitTimeInSec) {
-		WebElement visibleElement;
-		wait = new WebDriverWait(webDriver, waitTimeInSec);
-		try {
-			visibleElement = wait.until(ExpectedConditions
-					.elementToBeClickable(element));
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
-		}
-		return visibleElement != null ? true : false;
-	}
-
-	public static boolean waitForInVisibilityOfElement(WebElement element,
-			int waitTimeInSec) {
-		boolean isVisible = false;
-		List<WebElement> elements = new ArrayList<>();
-		elements.add(element);
-		wait = new WebDriverWait(webDriver, waitTimeInSec);
-		try {
-			isVisible = wait.until(ExpectedConditions
-					.invisibilityOfAllElements(elements));
-		} catch (Exception e) {
-			//e.printStackTrace();
-			return isVisible;
-		}
-
-		return isVisible;
-
-	}
-
-	public void waitForinvisiblityOfElementLocated(By locator) {
-		wait = new WebDriverWait(webDriver, 100);
-		wait.until(ExpectedConditions.invisibilityOfElementLocated(locator));
-
-	}
-
-	public void waitForvisiblityOfGivenCssselector(String locator) {
-		wait = new WebDriverWait(webDriver, 100);
-		wait.until(ExpectedConditions.visibilityOf(webDriver.findElement(By
-				.cssSelector("." + locator))));
-
-	}
-
-	public void waitForvisiblityOfGivenElement(WebElement ele) {
-		wait = new WebDriverWait(webDriver, 180);
-		wait.until(ExpectedConditions.visibilityOf(ele));
-
-	}
+//	public static boolean waitForElementToBeClickable(WebElement element, int waitTimeInSec) {
+//		WebElement visibleElement;
+//		wait = new WebDriverWait(webDriver, waitTimeInSec);
+//		try {
+//			visibleElement = wait.until(ExpectedConditions
+//					.elementToBeClickable(element));
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//			return false;
+//		}
+//		return visibleElement != null ? true : false;
+//	}
 
 	/**
 	 * This method will switch From Native to WebView
@@ -579,70 +516,7 @@ public class GenericWrappers {
 		return textList;
 	}
 	
-	public static void setDriver(String driver) throws MalformedURLException {
-
-		switch (driver) {
-		case "Chrome":
-			String osName = System.getProperty("os.name");
-			String chromeDriverStr = "webdriver.chrome.driver";
-			switch (osName) {
-			case "Linux":
-				System.setProperty(chromeDriverStr, properties("Chrome.linux"));
-				break;
-			case "Mac OS X":
-				System.setProperty(chromeDriverStr, properties("Chrome.mac"));
-				break;
-			default:
-				System.setProperty(chromeDriverStr,
-						properties("Chrome.windows"));
-				break;
-			}
-			ChromeOptions options = new ChromeOptions();
-			// options.addArguments("--window-size=1280,800");
-			Map<String, Object> prefs = new HashMap<String, Object>();
-			prefs.put("profile.default_content_settings.popups", 0);
-			options.addArguments("disable-extensions");
-			prefs.put("credentials_enable_service", false);
-			prefs.put("password_manager_enabled", false);
-			options.setExperimentalOption("prefs", prefs);
-			options.addArguments("chrome.switches", "--disable-extensions");
-			options.addArguments("--test-type");
-			options.addArguments("disable-infobars");
-			if (System.getProperty("isHeadless") != null
-					&& Boolean.parseBoolean(System.getProperty("isHeadless"))) {
-				options.addArguments("--headless");
-				options.addArguments("--disable-gpu");
-			}
-			LoggingPreferences logPrefs = new LoggingPreferences();
-			logPrefs.enable(LogType.PERFORMANCE, Level.ALL);
-			DesiredCapabilities cap = DesiredCapabilities.chrome();
-			cap.setCapability("acceptInsecureCerts", true);
-			cap.setCapability(ChromeOptions.CAPABILITY, options);
-			cap.setCapability(CapabilityType.UNEXPECTED_ALERT_BEHAVIOUR,
-					UnexpectedAlertBehaviour.ACCEPT);
-			cap.setCapability(CapabilityType.LOGGING_PREFS, logPrefs);
-			webDriver = new ChromeDriver(cap);
-			//webDriver = new RemoteWebDriver(new URL("http://10.140.237.208:4444/wd/hub"),cap);
-			break;
-		case "IE":
-			System.setProperty("webdriver.ie.driver", properties("Ie.windows"));
-			webDriver = new InternetExplorerDriver();
-			break;
-		case "Safari":
-			webDriver = new SafariDriver();
-			break;
-		case "iPad":
-			startAppiumServer();
-			break;
-		case "iPhoneSimulator":
-			startSimulator();
-			break;
-
-		default:
-			break;
-		}
-
-	}
+	
 
 	public static boolean isNotEmpty(String s) {
 		return Objects.nonNull(s) && !s.isEmpty();
@@ -756,7 +630,7 @@ public class GenericWrappers {
 
 		public static void setTextValueOnElement(WebElement element, String textValue) {
 			if (GenericWrappers.isNotEmpty(textValue)) {
-				if (element.isEnabled())
+			//	if (element.isEnabled())
 				element.sendKeys(textValue);
 			}
 		}	
@@ -770,7 +644,7 @@ public class GenericWrappers {
 		    boolean foundAlert = false;
 		    WebDriverWait wait = new WebDriverWait(webDriver, 5);
 		    try {
-		        wait.until(ExpectedConditions.alertIsPresent());
+		      //  wait.until(ExpectedConditions.alertIsPresent());
 		        foundAlert = true;
 		    } catch (Exception eTO) {
 		        foundAlert = false;
