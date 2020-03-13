@@ -22,6 +22,12 @@ public class TestAppPage extends WebPage {
 		@FindBy(xpath = "//XCUIElementTypeButton[@name=\"show alert\"]")
 		WebElement showAlert;
 
+		@FindBy(xpath = "//input[@title='Search']")
+		WebElement searchInput;
+		
+		@FindBy(xpath = "//div[contains(@class,'FPdoLc')]//input[contains(@class,'gNO89b' )]")
+		WebElement searchSubmit;
+	
 		public WebElement getFirstInput() {
 			return firstInput;
 		}
@@ -37,5 +43,12 @@ public class TestAppPage extends WebPage {
 		}
 		public WebElement getShowAlert() {
 			return showAlert;
+		}
+		public WebElement getSearchInput() {
+			return searchInput;
+		}
+		
+		public WebElement getSearchSubmit() {
+			return searchSubmit;
 		}
 	}
